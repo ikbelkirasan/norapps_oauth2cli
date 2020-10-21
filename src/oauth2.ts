@@ -13,6 +13,9 @@ export class OAuth2 {
   public authorizationUrl: string;
   public tokenUrl: string;
   public scopes: string[] = [];
+  public additionalParams: {
+    [key: string]: string;
+  };
 
   private client: AxiosInstance;
 
@@ -23,6 +26,7 @@ export class OAuth2 {
     scopes: string[];
     authorizationUrl: string;
     tokenUrl: string;
+    additionalParams: { [key: string]: string };
   }) {
     this.clientId = options.clientId;
     this.clientSecret = options.clientSecret;
@@ -30,6 +34,7 @@ export class OAuth2 {
     this.authorizationUrl = options.authorizationUrl;
     this.tokenUrl = options.tokenUrl;
     this.scopes = options.scopes;
+    this.additionalParams = options.additionalParams;
 
     this.client = axios.create();
     this.client.interceptors.response.use(undefined, (error) => {
@@ -45,6 +50,9 @@ export class OAuth2 {
     url.searchParams.set("redirect_uri", this.redirectUri);
     url.searchParams.set("response_type", "code");
     url.searchParams.set("scope", this.scopes.join(" "));
+    for (const param in this.additionalParams) {
+      url.searchParams.set(param, this.additionalParams[param]);
+    }
     return url.toString();
   }
 

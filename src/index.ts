@@ -75,6 +75,7 @@ async function main() {
       authorizationUrl: options.authorizationUrl || config.authorizationUrl,
       tokenUrl: options.tokenUrl || config.tokenUrl,
       scopes: config.scopes,
+      additionalParams: config.additionalParams,
     });
     return {
       options,
