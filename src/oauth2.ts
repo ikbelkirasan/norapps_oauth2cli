@@ -44,7 +44,7 @@ export class OAuth2 {
     });
   }
 
-  getauthorizationUrl() {
+  getAuthorizationUrl() {
     const url = new URL(this.authorizationUrl);
     url.searchParams.set("client_id", this.clientId);
     url.searchParams.set("redirect_uri", this.redirectUri);
@@ -59,22 +59,36 @@ export class OAuth2 {
   async getAccessToken(code: string) {
     return this.tokenRequest({
       grant_type: "authorization_code",
+      redirect_uri: this.redirectUri,
       code,
     });
   }
 
-  async refreshAccessToken(refreshToken: string) {
-    return this.tokenRequest({
+  async refreshAccessToken(
+    refreshToken: string,
+    options: { includeRedirectUri?: boolean } = {},
+  ) {
+    const payload: any = {
       grant_type: "refresh_token",
       refresh_token: refreshToken,
-    });
+    };
+    if (options.includeRedirectUri) {
+      payload["redirect_uri"] = this.redirectUri;
+    }
+
+    return this.tokenRequest(payload);
   }
 
   private async tokenRequest(options: {
     grant_type: "authorization_code" | "refresh_token";
     code?: string;
     refresh_token?: string;
+    redirect_uri?: string;
   }) {
+    const payload: any = {
+      ...options,
+    };
+
     const response = await this.client({
       method: "POST",
       url: this.tokenUrl,
@@ -82,10 +96,7 @@ export class OAuth2 {
         username: this.clientId,
         password: this.clientSecret,
       },
-      data: qs.stringify({
-        ...options,
-        redirect_uri: this.redirectUri,
-      }),
+      data: qs.stringify(payload),
     });
     return response.data;
   }

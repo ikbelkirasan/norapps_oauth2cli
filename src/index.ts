@@ -3,6 +3,7 @@ import open from "open";
 import dotenv from "dotenv";
 import globby from "globby";
 import inquirer from "inquirer";
+import _ from "lodash";
 import { Command } from "commander";
 
 import { OAuth2, waitForAuthorizationCode } from "./oauth2";
@@ -89,7 +90,7 @@ async function main() {
     .description("Get Access Token")
     .action(async () => {
       const { oauth, options } = await getContext();
-      const url = oauth.getauthorizationUrl();
+      const url = oauth.getAuthorizationUrl();
       console.log("Opening:", url);
       open(url);
       const { code } = await waitForAuthorizationCode({
@@ -111,9 +112,12 @@ async function main() {
       const { oauth } = await getContext();
       const authData = await storage.load();
       const refreshToken = authData["refresh_token"];
-      const newAuthData = await oauth.refreshAccessToken(refreshToken);
+      const newAuthData = await oauth.refreshAccessToken(refreshToken, {
+        includeRedirectUri: false,
+      });
       console.log("New Auth Data: ", newAuthData);
-      await storage.save(newAuthData);
+      const data = _.merge({}, authData, newAuthData);
+      await storage.save(data);
     });
 
   program.parse(process.argv);
